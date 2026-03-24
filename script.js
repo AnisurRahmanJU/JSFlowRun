@@ -1,15 +1,17 @@
 let editor;
 
+// ১. CodeMirror Initialization
 window.onload = function () {
   editor = CodeMirror(document.getElementById("editor"), {
     mode: "javascript",
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `// Define the function\nfunction addNumbers(a, b) {\n  return a + b;\n}\n\n// Call the function\nlet sum = addNumbers(10, 20);\nconsole.log(sum);`
+    value: `// ১. Variable & Array Declaration\nlet prices = [10, 20, 30, 40, 50];\nlet user = { name: "Anis", age: 25 };\n\n// ২. Function with Logic\nfunction calculateTotal(arr) {\n  let sum = 0;\n  for(let i = 0; i < arr.length; i++) {\n    sum = sum + arr[i];\n  }\n  return sum;\n}\n\n// ৩. Output Logic\nlet total = calculateTotal(prices);\nconsole.log("Total Price:", total);\n\nif(total > 100) {\n  alert("Expensive!");\n} else {\n  console.log("Budget Friendly");\n}`
   });
 };
 
+// ২. Generate Flowchart Logic
 function generateFlowchart() {
   const code = editor.getValue();
   const output = document.getElementById("output");
@@ -20,58 +22,40 @@ function generateFlowchart() {
     const flowCode = buildFlow(ast);
     const diagram = flowchart.parse(flowCode);
     
-    // --- SMART SCALING LOGIC ---
-    const lineCount = code.split('\n').length;
     const isMobile = window.innerWidth <= 600;
-    
-    // কোড ছোট হলে স্কেল কম হবে, কোড বড় হলে স্কেল বাড়বে
-    let dynamicScale = 1.0;
-    let dynamicLine = 40;
-
-    if (isMobile) {
-      if (lineCount < 10) {
-        dynamicScale = 0.9; // ছোট কোডের জন্য জুম কম
-        dynamicLine = 30;
-      } else {
-        dynamicScale = 1.1; // বড় কোডের জন্য জুম বেশি
-        dynamicLine = 50;
-      }
-    }
 
     diagram.drawSVG(output, {
       'line-width': 2,
-      'line-length': dynamicLine,
+      'line-length': isMobile ? 35 : 50,
       'text-margin': 10,
-      'font-size': isMobile ? 15 : 14,
+      'font-size': isMobile ? 13 : 14,
       'font-family': 'Inter',
       'yes-text': 'TRUE',
       'no-text': 'FALSE',
-      'scale': dynamicScale,
+      'scale': isMobile ? 0.85 : 1, 
       'flowstate': {
-        'variable': { 'fill': '#e1f5fe' },
-        'process': { 'fill': '#f1f8e9' },
-        'io': { 'fill': '#e1bee7' }, // Rhombus color
-        'decision': { 'fill': '#fff9c4' },
-        'function': { 'fill': '#f3e5f5' },
+        'variable': { 'fill': '#e1f5fe' }, // Light Blue for vars
+        'process': { 'fill': '#f1f8e9' },  // Light Green for operations
+        'io': { 'fill': '#e1bee7' },       // Purple for Rhombus (IO)
+        'decision': { 'fill': '#fff9c4' }, // Yellow for Diamonds
+        'function': { 'fill': '#f3e5f5' }, // Lavender for subroutines
         'end': { 'fill': '#ffebee' }
       }
     });
   } catch (err) {
-    output.innerHTML = `<p style="color:red; padding:20px;">Parse Error: ${err.message}</p>`;
+    output.innerHTML = `<p style="color:red; padding:10px;">Syntax Error: ${err.message}</p>`;
   }
 }
 
-// AST Walker (Supports All Topics)
+// ৩. AST Walker Logic
 function buildFlow(ast) {
   let nodes = ["st=>start: Start|start"];
   let edges = [];
   let count = 1;
-
   const newId = (pre) => pre + (count++);
 
   function walk(node, prev) {
     if (!node) return prev;
-
     switch(node.type) {
       case "Program":
       case "BlockStatement":
@@ -81,8 +65,14 @@ function buildFlow(ast) {
 
       case "VariableDeclaration":
         const vId = newId("var");
-        const vText = getText(node);
-        const vType = vText.includes("prompt") ? "inputoutput" : "operation";
+        // প্রতিটি ডিক্লারেশনকে (a = [1,2]) টেক্সট হিসেবে নেওয়া
+        const vText = node.declarations.map(d => {
+          const initVal = d.init ? getText(d.init) : "undefined";
+          return `${d.id.name} = ${initVal}`;
+        }).join(", ");
+        
+        const isV_IO = vText.includes("prompt");
+        const vType = isV_IO ? "inputoutput" : "operation";
         nodes.push(`${vId}=>${vType}: ${vText}|variable`);
         edges.push(`${prev}->${vId}`);
         return vId;
@@ -94,7 +84,7 @@ function buildFlow(ast) {
         const yesEnd = walk(node.consequent, dId + "(yes)");
         const noEnd = node.alternate ? walk(node.alternate, dId + "(no)") : dId + "(no)";
         const join = newId("merge");
-        nodes.push(`${join}=>operation: Continue|process`);
+        nodes.push(`${join}=>operation: Next|process`);
         edges.push(`${yesEnd}->${join}`);
         edges.push(`${noEnd}->${join}`);
         return join;
@@ -120,10 +110,10 @@ function buildFlow(ast) {
         return wCondId + "(no)";
 
       case "FunctionDeclaration":
-        const fId = newId("func");
-        nodes.push(`${fId}=>subroutine: FUNCTION: ${node.id.name}|function`);
-        edges.push(`${prev}->${fId}`);
-        return walk(node.body, fId);
+        const funcId = newId("func");
+        nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}|function`);
+        edges.push(`${prev}->${funcId}`);
+        return walk(node.body, funcId);
 
       case "ReturnStatement":
         const rId = newId("ret");
@@ -134,7 +124,7 @@ function buildFlow(ast) {
       case "ExpressionStatement":
         const eId = newId("proc");
         const eText = getText(node.expression);
-        const isIO = eText.includes("console.log") || eText.includes("alert") || eText.includes("prompt");
+        const isIO = /console\.log|alert|prompt/.test(eText);
         const eType = isIO ? "inputoutput" : "operation";
         nodes.push(`${eId}=>${eType}: ${eText}|io`);
         edges.push(`${prev}->${eId}`);
@@ -143,37 +133,68 @@ function buildFlow(ast) {
       default: return prev;
     }
   }
-
-  const lastPath = walk(ast, "st");
+  const final = walk(ast, "st");
   nodes.push("e=>end: End|end");
-  edges.push(`${lastPath}->e`);
+  edges.push(`${final}->e`);
   return nodes.join("\n") + "\n" + edges.join("\n");
 }
 
+// ৪. Helper: Get Full Text (Supports Array, Object, Member Expression)
 function getText(node) {
   if (!node) return "";
   switch(node.type) {
-    case "BinaryExpression": return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
     case "Identifier": return node.name;
-    case "Literal": return typeof node.value === 'string' ? `"${node.value}"` : node.value;
-    case "UpdateExpression": return `${node.argument.name}${node.operator}`;
+    case "Literal": return JSON.stringify(node.value);
+    case "BinaryExpression": return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+    case "UpdateExpression": return node.prefix ? `${node.operator}${getText(node.argument)}` : `${getText(node.argument)}${node.operator}`;
     case "AssignmentExpression": return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+    case "ArrayExpression": 
+      return `[${node.elements.map(getText).join(", ")}]`;
+    case "ObjectExpression":
+      const props = node.properties.map(p => `${p.key.name || p.key.value}: ${getText(p.value)}`).join(", ");
+      return `{${props}}`;
     case "MemberExpression": 
-      const p = node.computed ? `[${getText(node.property)}]` : `.${node.property.name}`;
-      return `${getText(node.object)}${p}`;
+      const prop = node.computed ? `[${getText(node.property)}]` : `.${node.property.name}`;
+      return `${getText(node.object)}${prop}`;
     case "CallExpression": 
       return `${getText(node.callee)}(${node.arguments.map(getText).join(", ")})`;
-    case "VariableDeclaration": return node.declarations.map(d => `${d.id.name}=${getText(d.init)}`).join(", ");
-    case "VariableDeclarator": return `${node.id.name}=${getText(node.init)}`;
     default: return "";
   }
 }
 
+// ৫. Clean Console Runner
 function runCode() {
   const consoleEl = document.getElementById("console");
-  consoleEl.innerText = "Output:\n---\n";
+  consoleEl.innerText = ""; 
   const originalLog = console.log;
   console.log = (...args) => consoleEl.innerText += args.join(" ") + "\n";
   try { eval(editor.getValue()); } catch (err) { consoleEl.innerText += "Error: " + err.message; }
   console.log = originalLog;
+}
+
+// ৬. Download PNG Logic
+function downloadImage() {
+  const svg = document.querySelector("#output svg");
+  if (!svg) { alert("Generate flowchart first!"); return; }
+
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const img = new Image();
+
+  const svgSize = svg.getBoundingClientRect();
+  canvas.width = svgSize.width * 2; 
+  canvas.height = svgSize.height * 2;
+
+  img.onload = function () {
+    ctx.fillStyle = "white"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const pngUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = pngUrl;
+    link.download = "image.png";
+    link.click();
+  };
+  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
 }
