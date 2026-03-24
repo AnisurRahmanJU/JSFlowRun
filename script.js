@@ -6,7 +6,7 @@ window.onload = function () {
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `let x = 0;\n\nfor(let i = 0; i < 5; i++) {\n  x += i;\n console.log(x);\n}\n\nif (x > 5) {\n  console.log("Big Result:" + x);\n} else {\n  console.log("Small Result");\n}\n\nconsole.log("Done");`
+    value: `let x = 0;\n\nfor(let i = 0; i < 10; i++) {\n  x += i;\n console.log(x);\n}\n\nif (x > 5) {\n  console.log("Big Result:" + x);\n} else {\n  console.log("Small Result");\n}\n\nconsole.log("Done");`
   });
 };
 
