@@ -55,6 +55,20 @@ let result = sum(5, 7);
 console.log("Sum:", result);
 ```
 
+**`Recursive Factorial`**
+```javascript
+
+function factorial(n) {
+  if (n <= 1) {
+    return 1;
+  }
+  // Recursive case: n * factorial(n-1)
+  return n * factorial(n - 1);
+}
+
+console.log(factorial(5));
+```
+
 ## 6. Array Iteration
 
 ```javascript
