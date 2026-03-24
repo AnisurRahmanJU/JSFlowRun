@@ -27,7 +27,7 @@ let n = 1;
 while (true) {
   console.log(n);
   n++;
-  if (n > 3) {
+  if (n > 10) {
     break;
   }
 }
