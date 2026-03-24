@@ -59,8 +59,9 @@ console.log("Sum:", result);
 
 ```javascript
 const fruits = ["Apple", "Banana", "Cherry"];
-for (let fruit of fruits) {
-  console.log(fruit);
+
+for (let i = 0; i < fruits.length; i++) {
+  console.log(fruits[i]);
 }
 ```
 
