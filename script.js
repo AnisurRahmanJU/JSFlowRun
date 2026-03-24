@@ -1,21 +1,19 @@
 let editor;
 
-// 1. Initialize CodeMirror on Window Load
 window.onload = function () {
   editor = CodeMirror(document.getElementById("editor"), {
     mode: "javascript",
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `let x = 0;\n\nfor(let i = 0; i < 5; i++) {\n  x += i;\n}\n\nif (x > 5) {\n  console.log("Big Result: " + x);\n} else {\n  console.log("Small Result");\n}\n\nconsole.log("Done");`
+    value: `let x = 0;\n\nfor(let i = 0; i < 5; i++) {\n  x += i;\n}\n\nif (x > 5) {\n  console.log("Big Result");\n} else {\n  console.log("Small Result");\n}\n\nconsole.log("Done");`
   });
 };
 
-// 2. Generate Flowchart Logic
 function generateFlowchart() {
   const code = editor.getValue();
   const output = document.getElementById("output");
-  output.innerHTML = ""; // Clear previous chart
+  output.innerHTML = ""; 
 
   try {
     const ast = esprima.parseScript(code, { range: true });
@@ -30,10 +28,11 @@ function generateFlowchart() {
       'font-family': 'Inter',
       'yes-text': 'TRUE',
       'no-text': 'FALSE',
+      'scale': 1, // মোবাইলে ফিট করতে চাইলে ০.৮ বা ০.৯ করতে পারেন
       'flowstate': {
         'variable': { 'fill': '#e1f5fe' },
         'process': { 'fill': '#f1f8e9' },
-        'decision': { 'fill': '#fff9c4' }, // Diamond shape for conditions
+        'decision': { 'fill': '#fff9c4' }, // DIAMOND SHAPE
         'end': { 'fill': '#ffebee' }
       }
     });
@@ -42,7 +41,6 @@ function generateFlowchart() {
   }
 }
 
-// 3. AST to Flowchart DSL Parser
 function buildFlow(ast) {
   let nodes = ["st=>start: Start|start"];
   let edges = [];
@@ -81,26 +79,19 @@ function buildFlow(ast) {
         return join;
 
       case "ForStatement":
-        // Initializer (let i = 0)
         const fInit = walk(node.init, prev);
-        
-        // Diamond Condition (i < 5)
         const fCondId = newId("forCond");
         nodes.push(`${fCondId}=>condition: FOR: ${getText(node.test)}|decision`);
         edges.push(`${fInit}->${fCondId}`);
         
-        // Loop Body
         const fBodyEnd = walk(node.body, fCondId + "(yes)");
-        
-        // Increment/Decrement Node (No "Join" - use actual code like i++)
         const fUpdId = newId("upd");
         nodes.push(`${fUpdId}=>operation: ${getText(node.update)}|process`);
         
-        // Connect body to update, and update back to diamond side
         edges.push(`${fBodyEnd}->${fUpdId}`);
-        edges.push(`${fUpdId}(left)->${fCondId}`);
+        edges.push(`${fUpdId}(left)->${fCondId}`); // Loop back
         
-        return fCondId + "(no)"; // Exit path
+        return fCondId + "(no)";
 
       case "WhileStatement":
         const wCondId = newId("whileCond");
@@ -108,9 +99,7 @@ function buildFlow(ast) {
         edges.push(`${prev}->${wCondId}`);
         
         const wBodyEnd = walk(node.body, wCondId + "(yes)");
-        // Back-link directly from the last statement in the body to the diamond
         edges.push(`${wBodyEnd}(left)->${wCondId}`);
-        
         return wCondId + "(no)";
 
       case "ExpressionStatement":
@@ -123,58 +112,38 @@ function buildFlow(ast) {
     }
   }
 
-  const finalPath = walk(ast, "st");
+  const lastPath = walk(ast, "st");
   nodes.push("e=>end: End|end");
-  edges.push(`${finalPath}->e`);
+  edges.push(`${lastPath}->e`);
 
   return nodes.join("\n") + "\n" + edges.join("\n");
 }
 
-// 4. Helper: Convert AST Node to Clean Text (Removes Node Labels)
 function getText(node) {
   if (!node) return "";
   switch(node.type) {
-    case "BinaryExpression": 
-      return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
-    case "Identifier": 
-      return node.name;
-    case "Literal": 
-      return node.value;
-    case "UpdateExpression": 
-      return `${node.argument.name}${node.operator}`;
-    case "AssignmentExpression": 
-      return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
-    case "MemberExpression": 
-      return `${getText(node.object)}.${node.property.name || getText(node.property)}`;
-    case "CallExpression": 
-      return `${getText(node.callee)}(...)`;
-    case "VariableDeclaration": 
-      return node.declarations.map(d => `${d.id.name}=${getText(d.init)}`).join(", ");
-    case "VariableDeclarator": 
-      return `${node.id.name}=${getText(node.init)}`;
-    default: 
-      return "";
+    case "BinaryExpression": return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+    case "Identifier": return node.name;
+    case "Literal": return node.value;
+    case "UpdateExpression": return `${node.argument.name}${node.operator}`;
+    case "AssignmentExpression": return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+    case "MemberExpression": return `${getText(node.object)}.${node.property.name || getText(node.property)}`;
+    case "CallExpression": return `${getText(node.callee)}(...)`;
+    case "VariableDeclaration": return node.declarations.map(d => `${d.id.name}=${getText(d.init)}`).join(", ");
+    case "VariableDeclarator": return `${node.id.name}=${getText(node.init)}`;
+    default: return "";
   }
 }
 
-// 5. Code Runner Logic
 function runCode() {
   const consoleEl = document.getElementById("console");
-  consoleEl.innerText = "Output:\n---\n";
+  consoleEl.innerText = "Running...\n---\n";
   const originalLog = console.log;
-  
-  // Intercept console.log to display in UI
-  console.log = (...args) => {
-    consoleEl.innerText += args.join(" ") + "\n";
-    originalLog.apply(console, args);
-  };
-
+  console.log = (...args) => consoleEl.innerText += args.join(" ") + "\n";
   try {
     eval(editor.getValue());
   } catch (err) {
-    consoleEl.innerText += "Runtime Error: " + err.message;
+    consoleEl.innerText += "Error: " + err.message;
   }
-  
-  // Restore native console.log
   console.log = originalLog;
 }
