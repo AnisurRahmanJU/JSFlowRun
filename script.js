@@ -102,6 +102,49 @@ function buildFlow(ast) {
         edges.push(`${noEnd}->${join}`);
         return join;
 
+  case "SwitchStatement":
+  const sId = newId("switch");
+  const discriminant = getText(node.discriminant);
+
+  nodes.push(`${sId}=>condition: SWITCH: ${discriminant}|decision`);
+  edges.push(`${prev}->${sId}`);
+
+  let afterSwitch = newId("merge");
+  nodes.push(`${afterSwitch}=>operation: Next|process`);
+
+  let lastCaseEnd = null;
+
+  node.cases.forEach((caseNode, index) => {
+    const caseLabel = caseNode.test 
+      ? `CASE: ${getText(caseNode.test)}`
+      : "DEFAULT";
+
+    const cId = newId("case");
+    nodes.push(`${cId}=>condition: ${caseLabel}|decision`);
+
+    if (index === 0) {
+      edges.push(`${sId}(yes)->${cId}`);
+    } else {
+      edges.push(`${lastCaseEnd}(no)->${cId}`);
+    }
+
+    let caseStart = cId + "(yes)";
+    let caseEnd = caseStart;
+
+    caseNode.consequent.forEach(stmt => {
+      caseEnd = walk(stmt, caseEnd);
+    });
+
+    edges.push(`${caseEnd}->${afterSwitch}`);
+    lastCaseEnd = cId;
+  });
+
+  if (lastCaseEnd) {
+    edges.push(`${lastCaseEnd}(no)->${afterSwitch}`);
+  }
+
+  return afterSwitch;
+
       case "ForStatement":
         const fInit = walk(node.init, prev);
         const fCondId = newId("forCond");
