@@ -7,7 +7,7 @@ window.onload = function () {
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `// ১. Variable & Array Declaration\nlet prices = [10, 20, 30, 40, 50];\nlet user = { name: "Anis", age: 25 };\n\n// ২. Function with Logic\nfunction calculateTotal(arr) {\n  let sum = 0;\n  for(let i = 0; i < arr.length; i++) {\n    sum = sum + arr[i];\n  }\n  return sum;\n}\n\n// ৩. Output Logic\nlet total = calculateTotal(prices);\nconsole.log("Total Price:", total);\n\nif(total > 100) {\n  console.log("Expensive Prices!");\n} else {\n  console.log("Budget Friendly");\n}`
+    value: `// ১. Variable & Array Declaration\nlet prices = [10, 20, 30, 40, 50];\nlet user = { name: "Anis", age: 25 };\n\n// ২. Function with Logic\nfunction calculateTotal(arr) {\n  let sum = 0;\n  for(let i = 0; i < arr.length; i++) {\n    sum = sum + arr[i];\n  }\n  return sum;\n}\n\n// ৩. Output Logic\nlet total = calculateTotal(prices);\nconsole.log("Total Price:", total);\n\nif(total > 100) {\n  console.log("Expensive Prices!");\n} else {\n  console.log("Budget Friendly");}`
   });
 };
 
