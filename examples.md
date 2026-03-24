@@ -1,5 +1,5 @@
 # JSFlowRun Examples 
-It will be included some examples covering loops, conditionals, arrays/objects, functions, and I/O so you can test all the features of your flowchart.
+Some examples has invluded here with covering loops, conditionals, arrays/objects, functions, and I/O so you can test all the features of your flowchart.
 
 ## 1. Simple For Loop
 
@@ -109,5 +109,5 @@ for (let i = 1; i <= 3; i++) {
 
 ---
 
-If you want, I can use own **examples**, including more advanced scenarios like nested conditionals, nested loops with break/continue, arrays of objects, function calls within loops, and try-catch blocks - all ready to generate flowcharts perfectly.
+If you want, you can use own **examples**, including more advanced scenarios like nested conditionals, nested loops with break/continue, arrays of objects, function calls within loops, and try-catch blocks - all ready to generate flowcharts perfectly.
 
