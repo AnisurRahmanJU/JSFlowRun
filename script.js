@@ -7,7 +7,7 @@ window.onload = function () {
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `// Input Example\nlet name = "Anis";\nlet age = 25;\n\n// Logic with Output\nif (age >= 18) {\n  console.log(name + " is Adult");\n} else {\n  console.log(name + " is Minor");\n}\n\n// Array & Loop Output\nlet skills = ["JS", "HTML"];\nfor(let i = 0; i < skills.length; i++) {\n  console.log("Skill: " + skills[i]);\n}\n\n// Final Output\nalert("Done!");`
+    value: `// Input Example\nlet name = "Anis";\nlet age =prompt("Enter your age");\n\n// Logic with Output\nif (age >= 18) {\n  console.log(name + " is Adult");\n} else {\n  console.log(name + " is Minor");\n}\n\n// Array & Loop Output\nlet skills = ["JS", "HTML"];\nfor(let i = 0; i < skills.length; i++) {\n  console.log("Skill: " + skills[i]);\n}\n\n// Final Output\nalert("Done!");`
   });
 };
 
