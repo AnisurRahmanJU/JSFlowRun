@@ -1,5 +1,5 @@
 # JSFlowRun Examples 
-Some examples has invluded here with covering loops, conditionals, arrays/objects, functions, and I/O so you can test all the features of your flowchart.
+Some examples has included in here with covering loops, conditionals, arrays/objects, functions, and I/O so you can test all the features of your flowchart.
 
 ## 1. Simple For Loop
 
