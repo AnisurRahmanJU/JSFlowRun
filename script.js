@@ -1,3 +1,9 @@
+/**
+ * Developer: Md. Anisur Rahman
+ * Project: JS Visualizer Pro (Flowchart Generator)
+ * Features: Variable Full Text, Rhombus IO, PNG Export, Break/Continue Handling
+ */
+
 let editor;
 
 // ১. CodeMirror Initialization
@@ -7,7 +13,7 @@ window.onload = function () {
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `// ১. Variable & Array Declaration\nlet prices = [10, 20, 30, 40, 50];\nlet user = { name: "Anis", age: 25 };\n\n// ২. Function with Logic\nfunction calculateTotal(arr) {\n  let sum = 0;\n  for(let i = 0; i < arr.length; i++) {\n    sum = sum + arr[i];\n  }\n  return sum;\n}\n\n// ৩. Output Logic\nlet total = calculateTotal(prices);\nconsole.log("Total Price:", total);\n\nif(total > 100) {\n  console.log("Expensive Prices!");\n} else {\n  console.log("Budget Friendly");\n}\n\n\n\n`
+    value: `for (let i = 1; i <= 20; i++) {\n  // 1. Skip all even numbers\n  if (i % 2 === 0) {\n    continue; \n  }\n\n  // 2. Stop the loop entirely when i is 15\n  if (i === 15) {\n    break;\n  }\n\n  console.log("Current Number:", i);\n}`
   });
 };
 
@@ -34,11 +40,11 @@ function generateFlowchart() {
       'no-text': 'FALSE',
       'scale': isMobile ? 0.85 : 1, 
       'flowstate': {
-        'variable': { 'fill': '#e1f5fe' }, // Light Blue for vars
-        'process': { 'fill': '#f1f8e9' },  // Light Green for operations
-        'io': { 'fill': '#e1bee7' },       // Purple for Rhombus (IO)
-        'decision': { 'fill': '#fff9c4' }, // Yellow for Diamonds
-        'function': { 'fill': '#f3e5f5' }, // Lavender for subroutines
+        'variable': { 'fill': '#e1f5fe' },
+        'process': { 'fill': '#f1f8e9' },
+        'io': { 'fill': '#e1bee7' }, 
+        'decision': { 'fill': '#fff9c4' },
+        'function': { 'fill': '#f3e5f5' },
         'end': { 'fill': '#ffebee' }
       }
     });
@@ -47,7 +53,7 @@ function generateFlowchart() {
   }
 }
 
-// ৩. AST Walker Logic
+// ৩. Master AST Walker Logic
 function buildFlow(ast) {
   let nodes = ["st=>start: Start|start"];
   let edges = [];
@@ -56,6 +62,7 @@ function buildFlow(ast) {
 
   function walk(node, prev) {
     if (!node) return prev;
+
     switch(node.type) {
       case "Program":
       case "BlockStatement":
@@ -65,7 +72,7 @@ function buildFlow(ast) {
 
       case "VariableDeclaration":
         const vId = newId("var");
-        // প্রতিটি ডিক্লারেশনকে (a = [1,2]) টেক্সট হিসেবে নেওয়া
+        // Full text for array, object, and simple variables
         const vText = node.declarations.map(d => {
           const initVal = d.init ? getText(d.init) : "undefined";
           return `${d.id.name} = ${initVal}`;
@@ -79,12 +86,18 @@ function buildFlow(ast) {
 
       case "IfStatement":
         const dId = newId("dec");
-        nodes.push(`${dId}=>condition: IF: ${getText(node.test)}|decision`);
+        const testText = getText(node.test);
+        
+        // ডায়মন্ড শেপ এখন শুধু কন্ডিশন দেখাবে (Clean Diamond)
+        nodes.push(`${dId}=>condition: IF: ${testText}|decision`);
         edges.push(`${prev}->${dId}`);
+        
         const yesEnd = walk(node.consequent, dId + "(yes)");
         const noEnd = node.alternate ? walk(node.alternate, dId + "(no)") : dId + "(no)";
+        
         const join = newId("merge");
         nodes.push(`${join}=>operation: Next|process`);
+        
         edges.push(`${yesEnd}->${join}`);
         edges.push(`${noEnd}->${join}`);
         return join;
@@ -121,6 +134,18 @@ function buildFlow(ast) {
         edges.push(`${prev}->${rId}`);
         return rId;
 
+      case "BreakStatement":
+        const bId = newId("brk");
+        nodes.push(`${bId}=>operation: BREAK|end`);
+        edges.push(`${prev}->${bId}`);
+        return bId;
+
+      case "ContinueStatement":
+        const cId = newId("cont");
+        nodes.push(`${cId}=>operation: CONTINUE|process`);
+        edges.push(`${prev}->${cId}`);
+        return cId;
+
       case "ExpressionStatement":
         const eId = newId("proc");
         const eText = getText(node.expression);
@@ -139,7 +164,7 @@ function buildFlow(ast) {
   return nodes.join("\n") + "\n" + edges.join("\n");
 }
 
-// ৪. Helper: Get Full Text (Supports Array, Object, Member Expression)
+// ৪. Helper: Get Code Text (Deep Recursion for Objects/Arrays)
 function getText(node) {
   if (!node) return "";
   switch(node.type) {
@@ -151,18 +176,20 @@ function getText(node) {
     case "ArrayExpression": 
       return `[${node.elements.map(getText).join(", ")}]`;
     case "ObjectExpression":
-      const props = node.properties.map(p => `${p.key.name || p.key.value}: ${getText(p.value)}`).join(", ");
-      return `{${props}}`;
+      const pMap = node.properties.map(p => `${p.key.name || p.key.value}: ${getText(p.value)}`);
+      return `{ ${pMap.join(", ")} }`;
     case "MemberExpression": 
       const prop = node.computed ? `[${getText(node.property)}]` : `.${node.property.name}`;
       return `${getText(node.object)}${prop}`;
     case "CallExpression": 
       return `${getText(node.callee)}(${node.arguments.map(getText).join(", ")})`;
+    case "VariableDeclarator":
+      return `${node.id.name} = ${getText(node.init)}`;
     default: return "";
   }
 }
 
-// ৫. Clean Console Runner
+// ৫. CLEAN Console Runner
 function runCode() {
   const consoleEl = document.getElementById("console");
   consoleEl.innerText = ""; 
@@ -172,10 +199,10 @@ function runCode() {
   console.log = originalLog;
 }
 
-// ৬. Download PNG Logic
+// ৬. Download PNG High-Res
 function downloadImage() {
   const svg = document.querySelector("#output svg");
-  if (!svg) { alert("Generate flowchart first!"); return; }
+  if (!svg) { alert("Please generate a flowchart first!"); return; }
 
   const svgData = new XMLSerializer().serializeToString(svg);
   const canvas = document.createElement("canvas");
