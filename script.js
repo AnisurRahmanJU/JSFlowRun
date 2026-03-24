@@ -1,17 +1,15 @@
 let editor;
 
-// ১. CodeMirror সেটআপ এবং ডেমো কোড
 window.onload = function () {
   editor = CodeMirror(document.getElementById("editor"), {
     mode: "javascript",
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `// Input Example\nlet name = "Anis";\nlet age =prompt("Enter your age");\n\n// Logic with Output\nif (age >= 18) {\n  console.log(name + " is Adult");\n} else {\n  console.log(name + " is Minor");\n}\n\n// Array & Loop Output\nlet skills = ["JS", "HTML"];\nfor(let i = 0; i < skills.length; i++) {\n  console.log("Skill: " + skills[i]);\n}\n\n// Final Output\nalert("Done!");`
+    value: `// Define the function\nfunction addNumbers(a, b) {\n  return a + b;\n}\n\n// Call the function\nlet sum = addNumbers(10, 20);\nconsole.log(sum);`
   });
 };
 
-// ২. মেইন ফ্লোচার্ট জেনারেটর ফাংশন
 function generateFlowchart() {
   const code = editor.getValue();
   const output = document.getElementById("output");
@@ -22,19 +20,37 @@ function generateFlowchart() {
     const flowCode = buildFlow(ast);
     const diagram = flowchart.parse(flowCode);
     
+    // --- SMART SCALING LOGIC ---
+    const lineCount = code.split('\n').length;
+    const isMobile = window.innerWidth <= 600;
+    
+    // কোড ছোট হলে স্কেল কম হবে, কোড বড় হলে স্কেল বাড়বে
+    let dynamicScale = 1.0;
+    let dynamicLine = 40;
+
+    if (isMobile) {
+      if (lineCount < 10) {
+        dynamicScale = 0.9; // ছোট কোডের জন্য জুম কম
+        dynamicLine = 30;
+      } else {
+        dynamicScale = 1.1; // বড় কোডের জন্য জুম বেশি
+        dynamicLine = 50;
+      }
+    }
+
     diagram.drawSVG(output, {
       'line-width': 2,
-      'line-length': 40,
+      'line-length': dynamicLine,
       'text-margin': 10,
-      'font-size': 14,
+      'font-size': isMobile ? 15 : 14,
       'font-family': 'Inter',
       'yes-text': 'TRUE',
       'no-text': 'FALSE',
-      'scale': 1,
+      'scale': dynamicScale,
       'flowstate': {
         'variable': { 'fill': '#e1f5fe' },
         'process': { 'fill': '#f1f8e9' },
-        'io': { 'fill': '#e1bee7' }, // রম্বস বা Input/Output শেপের কালার
+        'io': { 'fill': '#e1bee7' }, // Rhombus color
         'decision': { 'fill': '#fff9c4' },
         'function': { 'fill': '#f3e5f5' },
         'end': { 'fill': '#ffebee' }
@@ -45,7 +61,7 @@ function generateFlowchart() {
   }
 }
 
-// ৩. মাস্টার AST ওয়াকার
+// AST Walker (Supports All Topics)
 function buildFlow(ast) {
   let nodes = ["st=>start: Start|start"];
   let edges = [];
@@ -66,7 +82,6 @@ function buildFlow(ast) {
       case "VariableDeclaration":
         const vId = newId("var");
         const vText = getText(node);
-        // যদি prompt() থাকে তবে এটিকে input হিসেবে দেখাবে
         const vType = vText.includes("prompt") ? "inputoutput" : "operation";
         nodes.push(`${vId}=>${vType}: ${vText}|variable`);
         edges.push(`${prev}->${vId}`);
@@ -104,16 +119,6 @@ function buildFlow(ast) {
         edges.push(`${wBodyEnd}(left)->${wCondId}`);
         return wCondId + "(no)";
 
-      case "ExpressionStatement":
-        const eId = newId("proc");
-        const eText = getText(node.expression);
-        // console.log, alert বা prompt থাকলে রম্বস (inputoutput) শেপ হবে
-        const isIO = eText.includes("console.log") || eText.includes("alert") || eText.includes("prompt");
-        const eType = isIO ? "inputoutput" : "operation";
-        nodes.push(`${eId}=>${eType}: ${eText}|io`);
-        edges.push(`${prev}->${eId}`);
-        return eId;
-
       case "FunctionDeclaration":
         const fId = newId("func");
         nodes.push(`${fId}=>subroutine: FUNCTION: ${node.id.name}|function`);
@@ -126,53 +131,49 @@ function buildFlow(ast) {
         edges.push(`${prev}->${rId}`);
         return rId;
 
+      case "ExpressionStatement":
+        const eId = newId("proc");
+        const eText = getText(node.expression);
+        const isIO = eText.includes("console.log") || eText.includes("alert") || eText.includes("prompt");
+        const eType = isIO ? "inputoutput" : "operation";
+        nodes.push(`${eId}=>${eType}: ${eText}|io`);
+        edges.push(`${prev}->${eId}`);
+        return eId;
+
       default: return prev;
     }
   }
 
-  const finalPath = walk(ast, "st");
+  const lastPath = walk(ast, "st");
   nodes.push("e=>end: End|end");
-  edges.push(`${finalPath}->e`);
-
+  edges.push(`${lastPath}->e`);
   return nodes.join("\n") + "\n" + edges.join("\n");
 }
 
-// ৪. টেক্সট হেল্পার (সব ধরণের জাভাস্ক্রিপ্ট সিনট্যাক্স সাপোর্ট)
 function getText(node) {
   if (!node) return "";
   switch(node.type) {
-    case "BinaryExpression": 
-      return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+    case "BinaryExpression": return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
     case "Identifier": return node.name;
     case "Literal": return typeof node.value === 'string' ? `"${node.value}"` : node.value;
     case "UpdateExpression": return `${node.argument.name}${node.operator}`;
-    case "AssignmentExpression": 
-      return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+    case "AssignmentExpression": return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
     case "MemberExpression": 
-      const prop = node.computed ? `[${getText(node.property)}]` : `.${node.property.name}`;
-      return `${getText(node.object)}${prop}`;
+      const p = node.computed ? `[${getText(node.property)}]` : `.${node.property.name}`;
+      return `${getText(node.object)}${p}`;
     case "CallExpression": 
-      const args = node.arguments.map(getText).join(", ");
-      return `${getText(node.callee)}(${args})`;
-    case "ArrayExpression":
-      return `[${node.elements.map(getText).join(", ")}]`;
-    case "VariableDeclaration": 
-      return node.declarations.map(d => `${d.id.name}=${getText(d.init)}`).join(", ");
+      return `${getText(node.callee)}(${node.arguments.map(getText).join(", ")})`;
+    case "VariableDeclaration": return node.declarations.map(d => `${d.id.name}=${getText(d.init)}`).join(", ");
     case "VariableDeclarator": return `${node.id.name}=${getText(node.init)}`;
     default: return "";
   }
 }
 
-// ৫. কোড রানার
 function runCode() {
   const consoleEl = document.getElementById("console");
-  consoleEl.innerText = "Output:\n--------------------------------\n";
+  consoleEl.innerText = "Output:\n---\n";
   const originalLog = console.log;
   console.log = (...args) => consoleEl.innerText += args.join(" ") + "\n";
-  try {
-    eval(editor.getValue());
-  } catch (err) {
-    consoleEl.innerText += "Error: " + err.message;
-  }
+  try { eval(editor.getValue()); } catch (err) { consoleEl.innerText += "Error: " + err.message; }
   console.log = originalLog;
 }
