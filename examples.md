@@ -94,6 +94,7 @@ switch(day) {
 ```javascript
 let userName = prompt("Enter your name:");
 alert("Hello, " + userName + "!");
+console.log("Hello, " + userName + "!");
 ```
 
 ## 10. Nested Loops
