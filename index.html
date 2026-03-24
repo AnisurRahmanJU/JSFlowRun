@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JS Flowchart & Runner</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+
+  <!-- Raphael + Flowchart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.15.0/flowchart.min.js"></script>
+
+  <!-- Esprima -->
+  <script src="https://cdn.jsdelivr.net/npm/esprima/dist/esprima.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <h1>JS Flowchart & Runner</h1>
+      <p>Visualize your JavaScript code and run it instantly</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="editor-section">
+      <label for="editor">JavaScript Code:</label>
+      <div id="editor"></div>
+    </div>
+
+    <div class="buttons">
+      <button onclick="generateFlowchart()">Generate Flowchart</button>
+      <button onclick="runCode()">Run Code</button>
+    </div>
+
+    <div class="flowchart-section">
+      <h2>Flowchart:</h2>
+      <div id="output"></div>
+    </div>
+
+    <div class="console-section">
+      <h2>Console Output:</h2>
+      <pre id="console"></pre>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 JS Flowchart Generator | Built with CodeMirror & Flowchart.js</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
