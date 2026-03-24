@@ -12,7 +12,7 @@ for (let i = 1; i <= 5; i++) {
 ## 2. If-Else Condition
 
 ```javascript
-let age = 20;
+let age = prompt("Enter your age:");
 if (age >= 18) {
   console.log("Adult");
 } else {
