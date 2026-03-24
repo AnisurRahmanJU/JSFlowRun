@@ -3,7 +3,6 @@ body {
   margin: 0;
   font-family: 'Inter', sans-serif;
   background: #f0f2f5;
-  color: #333;
 }
 
 header {
@@ -11,7 +10,6 @@ header {
   color: white;
   padding: 20px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .container {
@@ -20,7 +18,6 @@ header {
   padding: 0 15px;
 }
 
-/* Editor Section */
 #editor {
   height: 300px;
   border: 1px solid #ccc;
@@ -30,7 +27,6 @@ header {
   margin-bottom: 20px;
 }
 
-/* Button Grid */
 .buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -46,57 +42,43 @@ button {
   cursor: pointer;
   background: #007bff;
   color: white;
-  transition: 0.2s;
 }
 
-button:hover { background: #0056b3; }
-
-/* --- FLOWCHART VIEWPORT --- */
+/* --- FLOWCHART VIEWPORT (FIXED) --- */
 #output {
   width: 100%;
-  height: 600px;
-  overflow: auto; /* মোবাইলে স্ক্রল করার জন্য */
+  height: 500px;
+  overflow: auto; 
   border: 1px solid #ddd;
   background: #fff;
   border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
-  box-sizing: border-box;
+  display: block; /* স্ক্রলিং এর জন্য ব্লক জরুরি */
+  position: relative;
 }
 
+/* SVG Container */
 #output svg {
   display: block;
-  margin: 0 auto;
+  margin: 20px auto; /* ডেস্কটপে সেন্টার করবে */
+  max-width: none; /* জুম বজায় রাখতে */
 }
 
-/* Console Styling */
 #console {
   background: #1e1e1e;
   color: #4ef037;
   padding: 15px;
   border-radius: 8px;
-  min-height: 100px;
+  min-height: 80px;
   font-family: 'Fira Code', monospace;
-  overflow-x: auto;
   white-space: pre-wrap;
 }
 
-/* --- MOBILE SPECIFIC: বড় দেখানোর জন্য --- */
+/* Mobile Adjustments */
 @media (max-width: 600px) {
   .buttons { grid-template-columns: 1fr; }
+  #output { height: 450px; }
   
-  #output { 
-    display: block; /* ফ্লেক্স সরিয়ে ব্লক যাতে স্ক্রল স্মুথ হয় */
-    padding: 10px;
-  }
-
   #output svg {
-    /* মোবাইলে জোর করে ছোট করবে না, বরং ইউজার স্ক্রল করে বড় দেখবে */
-    max-width: none !important; 
-    min-width: 900px; /* ৮০০ থেকে ১০০০ পিক্সেল দিলে অনেক বড় দেখাবে */
-    height: auto !important;
-    margin: 0; 
+    margin: 10px; /* মোবাইলে বাম থেকে শুরু হবে যাতে বড় চার্ট স্ক্রল করা যায় */
   }
 }
