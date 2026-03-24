@@ -4,6 +4,7 @@ body {
   font-family: 'Inter', sans-serif;
   background: #f7f8fa;
   color: #333;
+  line-height: 1.6;
 }
 
 header {
@@ -14,83 +15,127 @@ header {
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-header h1 {
-  margin: 0;
-  font-weight: 600;
-  font-size: 2rem;
-}
-
-header p {
-  margin: 5px 0 0;
-  font-weight: 400;
-  font-size: 1rem;
-}
-
 .container {
   max-width: 1000px;
-  margin: 40px auto;
+  margin: 20px auto;
   padding: 0 20px;
+  display: flex;
+  flex-direction: column;
 }
 
-.editor-section, .flowchart-section, .console-section {
-  margin-bottom: 30px;
+/* Editor Section */
+.editor-section {
+  margin-bottom: 20px;
 }
 
 #editor {
   height: 300px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
 }
 
+/* Button Grid: Prevents Overlapping */
 .buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  clear: both;
 }
 
 button {
-  padding: 10px 20px;
+  padding: 14px;
   font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.2s ease;
   background: #007bff;
   color: white;
   font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 button:hover {
   background: #0056b3;
+  transform: translateY(-1px);
 }
 
-.flowchart-section #output {
-  border: 1px solid #ccc;
-  padding: 15px;
-  border-radius: 6px;
-  background: #fff;
-  overflow-x: auto;
+button:active {
+  transform: translateY(1px);
 }
 
+/* --- THE SCROLLABLE FLOWCHART AREA --- */
+.flowchart-section {
+  margin-bottom: 30px;
+}
+
+.flowchart-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+#output {
+  display: block;
+  width: 100%;
+  height: 500px; /* Constrained height for vertical scroll */
+  border: 2px solid #eee;
+  border-radius: 8px;
+  background: #ffffff;
+  
+  /* Enable both horizontal and vertical scrolling */
+  overflow: auto; 
+  
+  /* Smooth scrolling for mobile */
+  -webkit-overflow-scrolling: touch; 
+  
+  /* Center the initial SVG content */
+  position: relative;
+  padding: 20px;
+}
+
+/* Ensure the SVG inside can grow as large as it needs */
+#output svg {
+  display: block;
+  margin: 0 auto;
+  min-width: 100%; 
+}
+
+/* Console Section */
 .console-section pre {
-  background: #111;
-  color: #0f0;
-  padding: 15px;
-  border-radius: 6px;
-  min-height: 100px;
-  overflow-x: auto;
+  background: #1e1e1e;
+  color: #4ef037;
+  padding: 20px;
+  border-radius: 8px;
+  min-height: 120px;
+  overflow: auto;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.95rem;
+  border: 1px solid #333;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 footer {
   text-align: center;
-  padding: 20px;
-  background: #f1f3f6;
-  font-size: 0.9rem;
-  color: #555;
-  border-top: 1px solid #ddd;
+  padding: 30px;
+  color: #888;
+  font-size: 0.85rem;
 }
 
-/* Highlight line style for CodeMirror */
-.active-line {
-  background: rgba(0, 123, 255, 0.15) !important;
+/* Mobile Responsive Adjustments */
+@media (max-width: 600px) {
+  .buttons {
+    grid-template-columns: 1fr; /* Stack buttons vertically */
+  }
+
+  #output {
+    height: 400px; /* Slightly shorter on mobile */
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
 }
