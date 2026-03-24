@@ -108,5 +108,5 @@ for (let i = 1; i <= 3; i++) {
 
 ---
 
-If you want, I can use own **examples**, including more advanced scenarios like **nested conditionals, nested loops with break/continue, arrays of objects, function calls within loops, and try-catch blocks**—all ready to generate flowcharts perfectly.
+If you want, I can use own **examples**, including more advanced scenarios like nested conditionals, nested loops with break/continue, arrays of objects, function calls within loops, and try-catch blocks - all ready to generate flowcharts perfectly.
 
