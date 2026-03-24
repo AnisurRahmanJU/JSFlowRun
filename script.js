@@ -13,7 +13,7 @@ window.onload = function () {
     lineNumbers: true,
     theme: "default",
     lineWrapping: true,
-    value: `for (let i = 1; i <= 20; i++) {\n if (i % 2 === 0) {\n    continue; \n  }\n  if (i === 15) {\n    break;\n  }\n\n  console.log(i);\n}`
+    value: `for (let i = 1; i <= 20; i++) {\n if (i % 2 == 0) {\n    continue; \n  }\n  if (i == 15) {\n    break;\n  }\n\n  console.log(i);\n}`
   });
 };
 
