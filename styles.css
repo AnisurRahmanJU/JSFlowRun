@@ -51,20 +51,17 @@ button {
 
 button:hover { background: #0056b3; }
 
-/* --- FLOWCHART CENTERED VIEWPORT --- */
+/* --- FLOWCHART VIEWPORT --- */
 #output {
   width: 100%;
-  min-height: 500px;
-  max-height: 700px;
-  overflow: auto; /* বড় চার্টের জন্য স্ক্রল সক্রিয় থাকবে */
+  height: 600px;
+  overflow: auto; /* মোবাইলে স্ক্রল করার জন্য */
   border: 1px solid #ddd;
   background: #fff;
   border-radius: 8px;
-  
-  /* Centering Logic */
   display: flex;
-  justify-content: center; /* Horizontal Center */
-  align-items: flex-start; /* Start from top */
+  justify-content: center;
+  align-items: flex-start;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -72,8 +69,6 @@ button:hover { background: #0056b3; }
 #output svg {
   display: block;
   margin: 0 auto;
-  max-width: 100%; /* মোবাইলে স্ক্রিনের ভেতরে রাখবে */
-  height: auto !important; /* প্রপোর্কাল রেশিও বজায় রাখবে */
 }
 
 /* Console Styling */
@@ -88,11 +83,20 @@ button:hover { background: #0056b3; }
   white-space: pre-wrap;
 }
 
-/* Mobile Adjustments */
+/* --- MOBILE SPECIFIC: বড় দেখানোর জন্য --- */
 @media (max-width: 600px) {
   .buttons { grid-template-columns: 1fr; }
+  
   #output { 
-    height: 400px; 
+    display: block; /* ফ্লেক্স সরিয়ে ব্লক যাতে স্ক্রল স্মুথ হয় */
     padding: 10px;
+  }
+
+  #output svg {
+    /* মোবাইলে জোর করে ছোট করবে না, বরং ইউজার স্ক্রল করে বড় দেখবে */
+    max-width: none !important; 
+    min-width: 900px; /* ৮০০ থেকে ১০০০ পিক্সেল দিলে অনেক বড় দেখাবে */
+    height: auto !important;
+    margin: 0; 
   }
 }
