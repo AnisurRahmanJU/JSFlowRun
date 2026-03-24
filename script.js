@@ -166,7 +166,7 @@ function getText(node) {
 // ৫. কোড রানার
 function runCode() {
   const consoleEl = document.getElementById("console");
-  consoleEl.innerText = "Running Output:\n---\n";
+  consoleEl.innerText = "Output:\n-------------------------------------\n";
   const originalLog = console.log;
   console.log = (...args) => consoleEl.innerText += args.join(" ") + "\n";
   try {
