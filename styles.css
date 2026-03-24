@@ -1,3 +1,4 @@
+/* General Body Styling */
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -19,21 +20,17 @@ header {
   padding: 0 15px;
 }
 
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 10px;
-  display: block;
-}
-
+/* Editor Section */
 #editor {
   height: 300px;
   border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
   background: #fff;
+  margin-bottom: 20px;
 }
 
+/* Button Grid */
 .buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -43,35 +40,43 @@ header {
 
 button {
   padding: 14px;
-  font-size: 1rem;
   font-weight: 600;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   background: #007bff;
   color: white;
-  transition: background 0.2s, transform 0.1s;
+  transition: 0.2s;
 }
 
 button:hover { background: #0056b3; }
-button:active { transform: scale(0.98); }
 
+/* --- FLOWCHART CENTERED VIEWPORT --- */
 #output {
   width: 100%;
-  height: 550px;
-  overflow: auto;
-  border: 1px solid #eee;
-  background: #fafafa;
-  position: relative;
-  border-radius: 4px;
+  min-height: 500px;
+  max-height: 700px;
+  overflow: auto; /* বড় চার্টের জন্য স্ক্রল সক্রিয় থাকবে */
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  
+  /* Centering Logic */
+  display: flex;
+  justify-content: center; /* Horizontal Center */
+  align-items: flex-start; /* Start from top */
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 #output svg {
   display: block;
-  margin: auto;
-  min-width: 900px; 
+  margin: 0 auto;
+  max-width: 100%; /* মোবাইলে স্ক্রিনের ভেতরে রাখবে */
+  height: auto !important; /* প্রপোর্কাল রেশিও বজায় রাখবে */
 }
 
+/* Console Styling */
 #console {
   background: #1e1e1e;
   color: #4ef037;
@@ -79,12 +84,15 @@ button:active { transform: scale(0.98); }
   border-radius: 8px;
   min-height: 100px;
   font-family: 'Fira Code', monospace;
-  font-size: 0.9rem;
-  overflow: auto;
+  overflow-x: auto;
   white-space: pre-wrap;
 }
 
+/* Mobile Adjustments */
 @media (max-width: 600px) {
   .buttons { grid-template-columns: 1fr; }
-  #output { height: 400px; }
+  #output { 
+    height: 400px; 
+    padding: 10px;
+  }
 }
