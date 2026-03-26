@@ -73,7 +73,7 @@ button:active { transform: scale(0.95); }
 /* Console Styling */
 #console {
   background: #1e1e1e;
-  color: #4ef037;
+  color: white;
   padding: 12px;
   border-radius: 8px;
   margin-top: 15px;
