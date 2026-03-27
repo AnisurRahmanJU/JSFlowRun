@@ -167,7 +167,9 @@ function buildFlow(ast) {
 
       case "FunctionDeclaration":
         const funcId = newId("func");
-        nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}|function`);
+       /* nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}|function`);*/
+        const params = node.params.map(p => getText(p)).join(", ");
+        nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}(${params})`);
         edges.push(`${prev}->${funcId}`);
         return walk(node.body, funcId);
 
@@ -208,7 +210,7 @@ function buildFlow(ast) {
 }
 
 // ৪. Helper: Get Code Text (Deep Recursion for Objects/Arrays)
-function getText(node) {
+/* function getText(node) {
   if (!node) return "";
   switch(node.type) {
     case "Identifier": return node.name;
@@ -230,7 +232,83 @@ function getText(node) {
       return `${node.id.name} = ${getText(node.init)}`;
     default: return "";
   }
+}*/
+
+function getText(node) {
+  if (!node) return "";
+
+  switch (node.type) {
+    case "Identifier":
+      return node.name;
+
+    case "Literal":
+      return JSON.stringify(node.value);
+
+    case "BinaryExpression":
+    case "LogicalExpression":
+      return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+
+    case "UnaryExpression":
+      return node.prefix
+        ? `${node.operator}${getText(node.argument)}`
+        : `${getText(node.argument)}${node.operator}`;
+
+    case "UpdateExpression":
+      return node.prefix
+        ? `${node.operator}${getText(node.argument)}`
+        : `${getText(node.argument)}${node.operator}`;
+
+    case "AssignmentExpression":
+      return `${getText(node.left)} ${node.operator} ${getText(node.right)}`;
+
+    case "ConditionalExpression":
+      return `${getText(node.test)} ? ${getText(node.consequent)} : ${getText(node.alternate)}`;
+
+    case "ArrayExpression":
+      return `[${node.elements.map(el => getText(el)).join(", ")}]`;
+
+    case "ObjectExpression":
+      return `{ ${node.properties.map(p => {
+        const key = p.key.name || p.key.value;
+        return `${key}: ${getText(p.value)}`;
+      }).join(", ")} }`;
+
+    case "MemberExpression":
+      const prop = node.computed
+        ? `[${getText(node.property)}]`
+        : `.${node.property.name}`;
+      return `${getText(node.object)}${prop}`;
+
+    case "CallExpression":
+      return `${getText(node.callee)}(${node.arguments.map(arg => getText(arg)).join(", ")})`;
+
+    case "ArrowFunctionExpression":
+      const params = node.params.map(p => getText(p)).join(", ");
+      return `(${params}) => ${getText(node.body)}`;
+
+    case "FunctionExpression":
+      const fnParams = node.params.map(p => getText(p)).join(", ");
+      return `function(${fnParams}) { ... }`;
+
+    case "TemplateLiteral":
+      return "`" + node.quasis.map((q, i) => {
+        const expr = node.expressions[i]
+          ? "${" + getText(node.expressions[i]) + "}"
+          : "";
+        return q.value.raw + expr;
+      }).join("") + "`";
+
+    case "VariableDeclarator":
+      return `${node.id.name} = ${getText(node.init)}`;
+
+    case "SequenceExpression":
+      return node.expressions.map(getText).join(", ");
+
+    default:
+      return "";
+  }
 }
+
 
 // ৫. CLEAN Console Runner
 function runCode() {
