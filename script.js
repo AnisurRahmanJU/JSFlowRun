@@ -165,11 +165,12 @@ function buildFlow(ast) {
         edges.push(`${wBodyEnd}(left)->${wCondId}`);
         return wCondId + "(no)";
 
-      case "FunctionDeclaration":
-        const funcId = newId("func");
-        nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}(${params})|function`);
-        edges.push(`${prev}->${funcId}`);
-        return walk(node.body, funcId);
+    case "FunctionDeclaration":
+      const funcId = newId("func");
+      const params = node.params.map(p => getText(p)).join(", "); 
+      nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}(${params})|function`);
+      edges.push(`${prev}->${funcId}`);
+      return walk(node.body, funcId);
 
       case "ReturnStatement":
         const rId = newId("ret");
