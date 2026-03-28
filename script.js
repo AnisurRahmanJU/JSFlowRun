@@ -172,11 +172,17 @@ function buildFlow(ast) {
       edges.push(`${prev}->${funcId}`);
       return walk(node.body, funcId);
 
-      case "ReturnStatement":
+      /*case "ReturnStatement":
         const rId = newId("ret");
         nodes.push(`${rId}=>inputoutput: RETURN ${getText(node.argument)}|process`);
         edges.push(`${prev}->${rId}`);
-        return rId;
+        return rId;*/
+
+  case "ReturnStatement":
+  const rId = newId("ret");
+  nodes.push(`${rId}=>operation: RETURN ${getText(node.argument)}|process`);
+  edges.push(`${prev}->${rId}`);
+  return rId;
 
       case "BreakStatement":
         const bId = newId("brk");
