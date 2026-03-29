@@ -120,6 +120,25 @@ for (let i = 1; i <= 3; i++) {
   }
 }
 ```
+```javascript
+const fruits = [
+  { name: "Apple", price: 300 },
+  { name: "Cherry", price: 250 },
+  { name: "Mango", price: 200}
+];
+
+let input = prompt("Enter Fruit Name(Apple/Cherry/Mango):");
+let qty = prompt("How much weight(kg)?:");
+
+let item = fruits.find(f => f.name.toLowerCase() === input.toLowerCase());
+
+if (item) {
+  console.log(`Total: ${item.price * qty} BDT`);
+} else {
+  console.log("Not found");
+}
+
+```
 
 ---
 
