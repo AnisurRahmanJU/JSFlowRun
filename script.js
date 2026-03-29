@@ -1,7 +1,5 @@
 /**
  * Developer: Md. Anisur Rahman
- * Project: JS Visualizer Pro (Flowchart Generator)
- * Features: Variable Full Text, Rhombus IO, PNG Export, Break/Continue Handling
  */
 
 let editor;
@@ -289,17 +287,6 @@ function getText(node) {
       return "";
   }
 }
-
-
-// ৫. CLEAN Console Runner
-/*function runCode() {
-  const consoleEl = document.getElementById("console");
-  consoleEl.innerText = ""; 
-  const originalLog = console.log;
-  console.log = (...args) => consoleEl.innerText += args.join(" ") + "\n";
-  try { eval(editor.getValue()); } catch (err) { consoleEl.innerText += "Error: " + err.message; }
-  console.log = originalLog;
-}*/
 
 function runCode() {
   const consoleEl = document.getElementById("console");
