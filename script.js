@@ -292,12 +292,44 @@ function getText(node) {
 
 
 // ৫. CLEAN Console Runner
-function runCode() {
+/*function runCode() {
   const consoleEl = document.getElementById("console");
   consoleEl.innerText = ""; 
   const originalLog = console.log;
   console.log = (...args) => consoleEl.innerText += args.join(" ") + "\n";
   try { eval(editor.getValue()); } catch (err) { consoleEl.innerText += "Error: " + err.message; }
+  console.log = originalLog;
+}*/
+
+function runCode() {
+  const consoleEl = document.getElementById("console");
+  consoleEl.innerText = ""; 
+  const originalLog = console.log;
+
+  // 👉 Paste your formatter HERE
+  function formatObject(obj) {
+    return "{ " + Object.entries(obj)
+      .map(([key, val]) => `${key}: ${val}`)
+      .join(", ") + " }";
+  }
+
+  console.log = (...args) => {
+    const formatted = args.map(arg => {
+      if (typeof arg === "object" && arg !== null) {
+        return formatObject(arg);
+      }
+      return arg;
+    }).join(" ");
+    
+    consoleEl.innerText += formatted + "\n";
+  };
+
+  try { 
+    eval(editor.getValue()); 
+  } catch (err) { 
+    consoleEl.innerText += "Error: " + err.message; 
+  }
+
   console.log = originalLog;
 }
 
