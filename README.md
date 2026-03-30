@@ -75,8 +75,28 @@ function factorial(n) {
 
 console.log(factorial(5));
 ```
+**`Recursive Fibonacci`**
 
-`Find out Index of Specific Number`
+```javascript
+function fib(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+let k = 0;
+while (k < 10) {
+    console.log(fib(k));
+    k = k + 1;
+}
+
+
+
+```
+
+
+**`Find out Index of Specific Number`**
 
 ```javascript
 function find_it(list, target, k) {
