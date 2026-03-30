@@ -67,6 +67,7 @@ function factorial(n) {
 
 console.log(factorial(5));
 ```
+`Find out Index of Specific Number`
 ```javascript
 function find_it(list, target, k) {
     if (k == list.length) {
