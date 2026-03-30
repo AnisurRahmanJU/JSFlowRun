@@ -260,7 +260,7 @@ case "ReturnStatement": {
 
     if (isRecursive) {
         text += ` → recursive call → ${currentFunctionName}(…)`;
-        nodes.push(`${rId}=>subroutine: RETURN ${text}|process`);
+        nodes.push(`${rId}=>subroutine: RETURN ${text}|function`);
     }
       else{
           nodes.push(`${rId}=>operation: RETURN ${text}|process`);
