@@ -67,6 +67,25 @@ function factorial(n) {
 
 console.log(factorial(5));
 ```
+```javascript
+function find_it(list, target, k) {
+    if (k == list.length) {
+        return "Not found";
+    }
+
+    if (list[k] == target) {
+        return "Found! Index: " + k;
+    }
+
+    return find_it(list, target, k + 1);
+}
+
+let my_list = [10, 20, 30, 40, 50];
+console.log(find_it(my_list, 30, k = 0));
+
+
+
+```
 
 ## 6. Array Iteration
 
