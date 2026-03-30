@@ -3,7 +3,7 @@
  */
 
 let editor;
-
+let currentFunctionName = null;
 // ১. CodeMirror Initialization
 window.onload = function () {
   editor = CodeMirror(document.getElementById("editor"), {
@@ -163,24 +163,111 @@ function buildFlow(ast) {
         edges.push(`${wBodyEnd}(left)->${wCondId}`);
         return wCondId + "(no)";
 
-    case "FunctionDeclaration":
+    /*case "FunctionDeclaration":
       const funcId = newId("func");
       const params = node.params.map(p => getText(p)).join(", "); 
       nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}(${params})|function`);
       edges.push(`${prev}->${funcId}`);
       return walk(node.body, funcId);
 
-      /*case "ReturnStatement":
-        const rId = newId("ret");
-        nodes.push(`${rId}=>inputoutput: RETURN ${getText(node.argument)}|process`);
-        edges.push(`${prev}->${rId}`);
-        return rId;*/
 
   case "ReturnStatement":
   const rId = newId("ret");
   nodes.push(`${rId}=>operation: RETURN ${getText(node.argument)}|process`);
   edges.push(`${prev}->${rId}`);
-  return rId;
+  return rId;*/
+        
+    case "FunctionDeclaration": {
+    const funcId = newId("func");
+    const params = node.params.map(p => getText(p)).join(", ");
+
+    nodes.push(`${funcId}=>subroutine: FUNCTION: ${node.id.name}(${params})|function`);
+    edges.push(`${prev}->${funcId}`);
+
+    const prevFunctionName = currentFunctionName;
+    currentFunctionName = node.id.name;
+
+    const endId = walk(node.body, funcId);
+
+    currentFunctionName = prevFunctionName;
+    return endId;
+}
+case "ReturnStatement": {
+    const rId = newId("ret");
+    const arg = node.argument;
+
+    let text = getText(arg);
+
+    function hasFunctionCall(node) {
+        if (!node) return false;
+        if (node.type === "CallExpression") return true;
+
+        switch(node.type) {
+            case "BinaryExpression":
+            case "LogicalExpression":
+                return hasFunctionCall(node.left) || hasFunctionCall(node.right);
+            case "UnaryExpression":
+            case "UpdateExpression":
+                return hasFunctionCall(node.argument);
+            case "MemberExpression":
+                return hasFunctionCall(node.object) || hasFunctionCall(node.property);
+            case "ConditionalExpression":
+                return hasFunctionCall(node.test) || hasFunctionCall(node.consequent) || hasFunctionCall(node.alternate);
+            case "AssignmentExpression":
+                return hasFunctionCall(node.left) || hasFunctionCall(node.right);
+            case "ArrayExpression":
+                return node.elements.some(hasFunctionCall);
+            case "ObjectExpression":
+                return node.properties.some(p => hasFunctionCall(p.value));
+            default:
+                return false;
+        }
+    }
+
+    function containsRecursiveCall(node, funcName) {
+        if (!node) return false;
+
+        if (
+            node.type === "CallExpression" &&
+            node.callee.type === "Identifier" &&
+            node.callee.name === funcName
+        ) return true;
+
+        switch(node.type) {
+            case "BinaryExpression":
+            case "LogicalExpression":
+                return containsRecursiveCall(node.left, funcName) || containsRecursiveCall(node.right, funcName);
+            case "UnaryExpression":
+            case "UpdateExpression":
+                return containsRecursiveCall(node.argument, funcName);
+            case "MemberExpression":
+                return containsRecursiveCall(node.object, funcName) || containsRecursiveCall(node.property, funcName);
+            case "ConditionalExpression":
+                return containsRecursiveCall(node.test, funcName) || containsRecursiveCall(node.consequent, funcName) || containsRecursiveCall(node.alternate, funcName);
+            case "AssignmentExpression":
+                return containsRecursiveCall(node.left, funcName) || containsRecursiveCall(node.right, funcName);
+            case "ArrayExpression":
+                return node.elements.some(e => containsRecursiveCall(e, funcName));
+            case "ObjectExpression":
+                return node.properties.some(p => containsRecursiveCall(p.value, funcName));
+            default:
+                return false;
+        }
+    }
+
+    const hasCall = hasFunctionCall(arg);
+    const isRecursive = currentFunctionName && containsRecursiveCall(arg, currentFunctionName);
+
+    if (isRecursive) {
+        text += ` → recursive call → ${currentFunctionName}(…)`;
+    }
+
+    nodes.push(`${rId}=>operation: RETURN ${text}|process`);
+    edges.push(`${prev}->${rId}`);
+
+    return rId;
+}
+        
 
       case "BreakStatement":
         const bId = newId("brk");
