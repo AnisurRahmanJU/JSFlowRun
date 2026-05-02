@@ -1,7 +1,11 @@
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&display=swap');
+
 /* General Body Styling */
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
   background: #f8f9fa;
   color: #333;
 }
@@ -19,14 +23,37 @@ header {
   padding: 0 15px;
 }
 
-/* Editor Section */
+/* --- EDITOR SECTION (Horizontal Scroll with Right Blank Space) --- */
 #editor {
   height: 280px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  overflow: hidden;
   background: #fff;
   margin-bottom: 15px;
+  
+  /* Main Scrolling Logic */
+  overflow-x: auto;       
+  overflow-y: auto;       
+  display: block;
+}
+
+/* 
+   এখানে padding-right বাড়ানো হয়েছে যাতে ডানে পর্যাপ্ত Blank Space থাকে।
+   display: inline-block নিশ্চিত করে যে প্যাডিংটি স্ক্রলবারকে বড় করবে।
+*/
+#editor code, 
+#editor pre, 
+#editor textarea, 
+#editor [contenteditable="true"], 
+.cm-content {
+  white-space: pre !important; 
+  word-wrap: normal !important;
+  display: inline-block;    /* ডানে জায়গা তৈরির জন্য এটি অত্যন্ত জরুরি */
+  min-width: 100%;          /* টেক্সট ছোট থাকলেও যাতে এডিটর পূর্ণ থাকে */
+  padding-right: 300px;     /* ডানে ৩০০ পিক্সেল অতিরিক্ত খালি জায়গা */
+  padding-bottom: 0px;      /* নিচে বাড়তি জায়গা রাখা হয়নি আপনার অনুরোধ অনুযায়ী */
+  box-sizing: border-box;
+  outline: none;
 }
 
 /* Button Grid */
@@ -46,6 +73,7 @@ button {
   background: #007bff;
   color: white;
   transition: 0.3s;
+  font-family: 'Hind Siliguri', sans-serif;
 }
 
 button:active { transform: scale(0.95); }
@@ -54,12 +82,12 @@ button:active { transform: scale(0.95); }
 #output {
   width: 100%;
   height: 500px;
-  overflow: auto; /* মোবাইলে হাত দিয়ে সরানোর জন্য */
+  overflow: auto; 
   border: 2px solid #eee;
   background: #ffffff;
   border-radius: 8px;
   display: flex;
-  justify-content: center; /* ডেস্কটপে মাঝখানে */
+  justify-content: center; 
   align-items: flex-start;
   padding: 15px;
   box-sizing: border-box;
@@ -70,17 +98,22 @@ button:active { transform: scale(0.95); }
   margin: 0 auto;
 }
 
-/* Console Styling */
+/* --- CONSOLE STYLING (Vertical Only Scroll) --- */
 #console {
   background: #1e1e1e;
-  color: white;
+  color: #00ff00;
   padding: 12px;
   border-radius: 8px;
   margin-top: 15px;
-  font-family: 'Fira Code', monospace;
+  font-family: 'Fira Code', 'Courier New', monospace;
   font-size: 13px;
-  min-height: 60px;
-  white-space: pre-wrap;
+  height: 120px;
+  
+  /* Vertical Only Scrolling */
+  overflow-y: auto;       
+  overflow-x: hidden;     
+  white-space: pre-wrap;  
+  word-break: break-all;
 }
 
 /* --- MOBILE SPECIFIC FIXES --- */
@@ -88,13 +121,12 @@ button:active { transform: scale(0.95); }
   .buttons { grid-template-columns: 1fr; }
   
   #output { 
-    display: block; /* মোবাইলে ব্লক দিলে স্ক্রলিং ভালো হয় */
+    display: block; 
     height: 450px;
   }
 
   #output svg {
-    /* মোবাইলে জোর করে বিশাল বড় করবে না */
     max-width: none !important; 
-    margin: 0; /* বাম দিক থেকে শুরু হবে */
+    margin: 0;
   }
 }
