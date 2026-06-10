@@ -5,49 +5,127 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JS Flowchart & Runner</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Fira+Code&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-  
-  <link rel="stylesheet" href="styles.css">
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.15.0/flowchart.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/esprima/dist/esprima.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <header>
-  <h1>JS Flowchart & Runner</h1>
-  <p>Generate JS Code to Flowchart and Run</p>
+  <div class="logo-container">
+    <h1><span class="logo-main">JS Flowchart</span><span class="logo-highlight"> & Runner</span></h1>
+  </div>
+  <p class="site-subtitle">Generate JS Code to Flowchart and Run</p>
 </header>
 
-<main class="container">
-  <div class="editor-section">
-    <span class="section-title">JavaScript Code</span>
-    <div id="editor"></div>
+<main class="ide-container">
+  <div class="workspace">
+    
+    <div class="panel">
+      <span class="section-title">📝 JavaScript Code:</span>
+      <div id="editor"></div>
+      
+      <div class="button-group">
+        <button class="btn-action" onclick="generateFlowchart()">🎨 Generate Flowchart</button>
+        <button class="btn-run" onclick="runCode()"> ▶️ Run The Code</button>
+      </div>
+      
+      <span class="section-title">💻 Console Output:</span>
+      <pre id="console"></pre>
+    </div>
+
+    <div class="panel">
+      <span class="section-title">📊 Flowchart Output:</span>
+      <div id="output"></div>
+      
+      <div class="output-button-group">
+        <button id="downloadBtn" class="btn-download" onclick="downloadImage()">💾 Download Flowchart</button>
+        
+        <a href="https://github.com/AnisurRahmanJU/JSFlowRun/" target="_blank" style="flex: 1; text-decoration: none; display: flex;">
+          <button type="button" class="btn-example">💡 See examples</button>
+        </a>
+      </div>
+    </div>
+    
   </div>
-
-    <button onclick="generateFlowchart()">Generate Flowchart</button>
-    <br><br>
-
-  <div class="flowchart-section">
-    <span class="section-title">Flowchart Output</span>
-    <div id="output"></div>
-  </div><br>
-  <button onclick="runCode()">Run The Code</button>
-  <button onclick="downloadImage()">Download Flowchart</button>
-  <br><br>
-
-  <div class="console-section">
-    <span class="section-title">Console Output</span>
-    <pre id="console"></pre>
-  </div>
-  <a href="https://github.com/AnisurRahmanJU/JSFlowRun/" target="_blank"><button type="btn btn-info">See examples</button></a>
 </main>
 
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/AnisurRahmanJU/JSFlowRun" target="_blank">📂 GitHub Repository</a>
+    <a href="https://github.com/AnisurRahmanJU/" target="_blank">👤 Md. Anisur Rahman</a>
+  </div>
+  <div class="developer-info">
+    Developer: <b>Md. Anisur Rahman</b> | Web Tools Lab
+  </div>
+</footer>
+
 <script src="script.js"></script>
+
+<script>
+  // ১. গ্লোবাল স্কোপে কোডমিরর (CodeMirror) ইডিটর ইনিশিয়ালাইজেশন
+  var editor;
+  window.addEventListener("DOMContentLoaded", function() {
+    editor = CodeMirror(document.getElementById("editor"), {
+      lineNumbers: true,
+      mode: "javascript",
+      matchBrackets: true,
+      lineWrapping: true
+    });
+    
+    // ডিফল্ট ডেমো কোড সেটআপ 
+    editor.setValue(`// Write your standard JavaScript code here\nlet count = 10;\nif (count > 5) {\n  console.log("Count is greater than 5");\n}`);
+  });
+
+  // ২. রান টাইমে কনসোল ডেটা কন্টেন্ট প্রসেস করার ফিল্টার ইঞ্জিন
+  function formatConsoleOutput(value) {
+    if (value === null) return "null";
+    if (value === undefined) return "undefined";
+    
+    if (Array.isArray(value)) {
+      return "[" + value.map(v => formatConsoleOutput(v)).join(", ") + "]";
+    }
+    
+    if (typeof value === "object") {
+      return "{ " + Object.entries(value).map(([k, v]) => `${k}: ${formatConsoleOutput(v)}`).join(", ") + " }";
+    }
+    
+    return value;
+  }
+
+  // ৩. মূল রান ফাংশন (script.js এর ইন্টিগ্রেটেড কম্পাইলার হ্যান্ডলার)
+  function runCode() {
+    const consoleEl = document.getElementById("console");
+    consoleEl.innerText = "";
+    
+    // script.js এর মেইন ফাংশন এক্সিস্টেন্স চেক, না থাকলে ফলব্যাক হ্যান্ডলার কাজ করবে
+    const compileProcessor = typeof banglaToJS === 'function' ? banglaToJS : function(rawCode) { return rawCode; };
+    
+    const code = compileProcessor(editor.getValue());
+    const originalLog = console.log;
+    
+    // console.log ইন্টারসেপ্ট ও রি-রাইট মেকানিজম
+    console.log = (...args) => {
+      const formattedArgs = args.map(arg => formatConsoleOutput(arg));
+      consoleEl.innerText += formattedArgs.join(" ") + "\n";
+    };
+
+    try { 
+      eval(code); 
+    } catch(err) { 
+      consoleEl.innerText += "Error: " + err.message; 
+    }
+    
+    console.log = originalLog; // কনসোল ডিফল্ট স্টেটে রিসেট
+  } 
+</script>
 </body>
 </html>
