@@ -14,6 +14,8 @@ let stepState = null;              // { generator, finished }
 let visitedFlowIds = new Set();    // kept for API symmetry / possible future use
 let currentHighlightLine = null;   // currently highlighted CodeMirror line number
 let autoPlayInterval = null;
+let varTraceWindowEl = null;       // floating variable trace window DOM element
+let varTraceDragState = null;      // drag offset while dragging the floating window
 
 // ১. CodeMirror Initialization
 window.onload = function () {
@@ -755,7 +757,7 @@ function* execStatement(node, scope) {
   if (!node) return;
 
   // প্রতিটি স্টেটমেন্টের ঠিক আগে থামো — UI এখানে লাইন/নোড হাইলাইট করবে
-  yield { node };
+  yield { node, scope };
 
   switch (node.type) {
 
@@ -927,6 +929,257 @@ function* execStatement(node, scope) {
   }
 }
 
+// ==================================================================
+// ============  FLOATING VARIABLE TRACE TABLE WINDOW  ==============
+// ==================================================================
+// A small draggable floating window that shows the values of every
+// variable in the current scope chain, live, while stepping through code.
+
+const VAR_TRACE_BUILTIN_NAMES = new Set([
+  "Math", "console", "JSON", "Array", "Object", "String", "Number",
+  "Boolean", "Date", "undefined", "NaN", "Infinity"
+]);
+
+function ensureVarTraceWindow() {
+  if (varTraceWindowEl) return varTraceWindowEl;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #varTraceWindow {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      width: 260px;
+      max-height: 60vh;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+    #varTraceWindow.collapsed #varTraceBody { display: none; }
+    #varTraceHeader {
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+    }
+    #varTraceHeader .vtw-title { font-weight: 600; }
+    #varTraceHeader .vtw-btns button {
+      background: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 6px;
+      line-height: 1;
+      padding: 2px 4px;
+    }
+    #varTraceHeader .vtw-btns button:hover { opacity: 0.7; }
+    #varTraceBody {
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    #varTraceTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #varTraceTable th, #varTraceTable td {
+      text-align: left;
+      padding: 5px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      word-break: break-all;
+    }
+    #varTraceTable th {
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+    }
+    #varTraceTable td.vtw-name { color: #1d4ed8; font-weight: 600; }
+    #varTraceTable td.vtw-value { color: #059669; }
+    #varTraceTable tr.vtw-scope-row td {
+      background: #fef9c3;
+      font-size: 11px;
+      color: #92400e;
+      font-weight: 600;
+      padding: 4px 10px;
+    }
+    #varTraceEmpty {
+      padding: 12px 10px;
+      color: #94a3b8;
+      font-style: italic;
+      text-align: center;
+    }
+    @media (max-width: 600px) {
+      #varTraceWindow { width: 200px; top: auto; bottom: 12px; right: 12px; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const win = document.createElement("div");
+  win.id = "varTraceWindow";
+  win.innerHTML = `
+    <div id="varTraceHeader">
+      <span class="vtw-title">🔍 Variable Trace</span>
+      <span class="vtw-btns">
+        <button id="varTraceMinBtn" title="Minimize/expand">—</button>
+        <button id="varTraceCloseBtn" title="Close">✕</button>
+      </span>
+    </div>
+    <div id="varTraceBody">
+      <table id="varTraceTable">
+        <thead><tr><th>Name</th><th>Value</th></tr></thead>
+        <tbody id="varTraceTbody"></tbody>
+      </table>
+      <div id="varTraceEmpty" style="display:none;">No variables yet</div>
+    </div>
+  `;
+  document.body.appendChild(win);
+  varTraceWindowEl = win;
+
+  const header = win.querySelector("#varTraceHeader");
+
+  const startDrag = (clientX, clientY) => {
+    const rect = win.getBoundingClientRect();
+    varTraceDragState = { offsetX: clientX - rect.left, offsetY: clientY - rect.top };
+    win.style.right = "auto";
+    win.style.bottom = "auto";
+  };
+
+  header.addEventListener("mousedown", (e) => {
+    if (e.target.closest("button")) return;
+    startDrag(e.clientX, e.clientY);
+    document.addEventListener("mousemove", onVarTraceMouseMove);
+    document.addEventListener("mouseup", onVarTraceDragEnd);
+  });
+
+  header.addEventListener("touchstart", (e) => {
+    if (e.target.closest("button")) return;
+    const t = e.touches[0];
+    startDrag(t.clientX, t.clientY);
+    document.addEventListener("touchmove", onVarTraceTouchMove, { passive: false });
+    document.addEventListener("touchend", onVarTraceDragEnd);
+  }, { passive: true });
+
+  win.querySelector("#varTraceMinBtn").addEventListener("click", () => {
+    win.classList.toggle("collapsed");
+  });
+  win.querySelector("#varTraceCloseBtn").addEventListener("click", () => {
+    win.style.display = "none";
+  });
+
+  return win;
+}
+
+function positionVarTraceWindow(x, y) {
+  const win = varTraceWindowEl;
+  if (!win) return;
+  const maxX = window.innerWidth - win.offsetWidth - 4;
+  const maxY = window.innerHeight - win.offsetHeight - 4;
+  win.style.left = Math.max(4, Math.min(x, maxX)) + "px";
+  win.style.top = Math.max(4, Math.min(y, maxY)) + "px";
+}
+
+function onVarTraceMouseMove(e) {
+  if (!varTraceDragState) return;
+  positionVarTraceWindow(e.clientX - varTraceDragState.offsetX, e.clientY - varTraceDragState.offsetY);
+}
+
+function onVarTraceTouchMove(e) {
+  if (!varTraceDragState) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  positionVarTraceWindow(t.clientX - varTraceDragState.offsetX, t.clientY - varTraceDragState.offsetY);
+}
+
+function onVarTraceDragEnd() {
+  varTraceDragState = null;
+  document.removeEventListener("mousemove", onVarTraceMouseMove);
+  document.removeEventListener("mouseup", onVarTraceDragEnd);
+  document.removeEventListener("touchmove", onVarTraceTouchMove);
+  document.removeEventListener("touchend", onVarTraceDragEnd);
+}
+
+// Collects variables from the current scope outward, one group per level
+function collectScopeChainVars(scope) {
+  const levels = [];
+  let s = scope;
+  let depth = 0;
+  while (s) {
+    const entries = [];
+    for (const [name, value] of s.vars.entries()) {
+      if (!VAR_TRACE_BUILTIN_NAMES.has(name)) entries.push([name, value]);
+    }
+    if (entries.length) levels.push({ depth, entries });
+    s = s.parent;
+    depth++;
+  }
+  return levels;
+}
+
+function formatVarTraceValue(value) {
+  if (typeof value === "function" || (value && value.__isUserFunction__)) return "ƒ function";
+  try {
+    return formatValueForConsole(value);
+  } catch (e) {
+    return String(value);
+  }
+}
+
+// Re-renders the table for the given scope, or shows an empty state if none
+function updateVarTraceTable(scope) {
+  const win = ensureVarTraceWindow();
+  if (win.style.display !== "flex") win.style.display = "flex";
+
+  const tbody = win.querySelector("#varTraceTbody");
+  const emptyEl = win.querySelector("#varTraceEmpty");
+  const tableEl = win.querySelector("#varTraceTable");
+  tbody.innerHTML = "";
+
+  const levels = scope ? collectScopeChainVars(scope) : [];
+
+  if (!levels.length) {
+    emptyEl.style.display = "block";
+    tableEl.style.display = "none";
+    return;
+  }
+
+  emptyEl.style.display = "none";
+  tableEl.style.display = "table";
+
+  levels.forEach(({ depth, entries }) => {
+    const scopeRow = document.createElement("tr");
+    scopeRow.className = "vtw-scope-row";
+    const label = depth === 0 ? "Current Scope" : `Parent Scope (${depth})`;
+    scopeRow.innerHTML = `<td colspan="2">${label}</td>`;
+    tbody.appendChild(scopeRow);
+
+    entries.forEach(([name, value]) => {
+      const tr = document.createElement("tr");
+      const nameTd = document.createElement("td");
+      nameTd.className = "vtw-name";
+      nameTd.textContent = name;
+      const valTd = document.createElement("td");
+      valTd.className = "vtw-value";
+      valTd.textContent = formatVarTraceValue(value);
+      tr.appendChild(nameTd);
+      tr.appendChild(valTd);
+      tbody.appendChild(tr);
+    });
+  });
+}
+
 // ================== STEP-MODE UI DRIVER ==================
 
 function setStepControlsEnabled(started) {
@@ -990,6 +1243,8 @@ function startStepMode() {
   };
 
   renderFlowchartState(null);
+  ensureVarTraceWindow();
+  updateVarTraceTable(rootScope);
   setStepControlsEnabled(true);
 }
 
@@ -1011,8 +1266,9 @@ function stepNext() {
     return;
   }
 
-  const { node } = result.value;
+  const { node, scope } = result.value;
   highlightCodeLine(node);
+  updateVarTraceTable(scope);
 
   const flowId = astNodeToFlowId.get(node);
   if (flowId) {
@@ -1036,6 +1292,7 @@ function resetStepMode() {
   stepState = null;
   visitedFlowIds = new Set();
   renderFlowchartState(null);
+  updateVarTraceTable(null);
   document.getElementById("console").innerText = "";
 }
 
