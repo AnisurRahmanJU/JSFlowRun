@@ -1,12 +1,12 @@
 /* ================= GENERAL STYLING ================= */
-* { 
-  box-sizing: border-box; 
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   font-family: 'Inter', 'Hind Siliguri', sans-serif;
-  background: #f0f9f4; 
+  background: #f0f9f4;
   color: #2d3748;
   display: flex;
   flex-direction: column;
@@ -15,7 +15,7 @@ body {
 
 /* ================= HEADER STYLING ================= */
 header {
-  background: #1a2e22; 
+  background: #1a2e22;
   color: white;
   padding: 16px 24px;
   text-align: left;
@@ -23,6 +23,10 @@ header {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+header a {
+  text-decoration: none;
 }
 
 .logo-container h1 {
@@ -33,12 +37,12 @@ header {
   display: inline-block;
 }
 
-.logo-main { 
-  color: #ffffff; 
+.logo-main {
+  color: #ffffff;
 }
 
-.logo-highlight { 
-  color: #4ade80; 
+.logo-highlight {
+  color: #4ade80;
 }
 
 .site-subtitle {
@@ -58,11 +62,13 @@ header {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
+/* minmax(0, 1fr) stops long code lines from stretching the columns */
 .workspace {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px;
   align-items: stretch;
 }
@@ -76,6 +82,8 @@ header {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;        /* allows the panel to shrink instead of growing with content */
+  overflow: hidden;
 }
 
 .section-title {
@@ -91,7 +99,7 @@ header {
 /* ================= CONTROL GROUP & BUTTONS ================= */
 .button-group {
   display: flex;
-  flex-direction: row; 
+  flex-direction: row;
   gap: 10px;
   width: 100%;
   margin-bottom: 15px;
@@ -102,7 +110,7 @@ header {
   flex-direction: row;
   gap: 10px;
   width: 100%;
-  margin-top: auto; 
+  margin-top: auto;
 }
 
 button {
@@ -118,12 +126,12 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  flex: 1; 
-  white-space: nowrap; 
+  flex: 1;
+  white-space: nowrap;
 }
 
-button:active { 
-  transform: scale(0.97); 
+button:active {
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -162,34 +170,109 @@ button:disabled {
 .btn-step-reset { background: #64748b; color: white; }
 .btn-step-reset:hover:not(:disabled) { background: #475569; }
 
-/* ================= CODE EDITOR CONTAINER ================= */
+/* ================= CODE EDITOR: FIXED SIZE + HORIZONTAL SCROLL ================= */
+/* The wrapper has a fixed height and never grows or shrinks */
 #editor {
+  width: 100%;
+  height: 320px;
+  min-height: 320px;
+  max-height: 320px;
+  flex: 0 0 320px;
   margin-bottom: 15px;
   border-radius: 6px;
   border: 1px solid #b2d2e8;
   overflow: hidden;
+  position: relative;
 }
 
+/* CodeMirror fills the wrapper exactly */
+#editor .CodeMirror,
 .CodeMirror {
-  background: #f2f7fc !important; 
-  color: #2c3e50 !important; 
-  height: 320px;
+  width: 100% !important;
+  height: 100% !important;
+  background: #f2f7fc !important;
+  color: #2c3e50 !important;
   font-size: 15px;
   font-family: 'Fira Code', 'Courier New', monospace;
+  line-height: 1.5;
 }
 
-.CodeMirror-cursor { 
-  border-left: 2px solid #2980b9 !important; 
+/* The scroll area: vertical + horizontal scrollbars appear when needed */
+.CodeMirror-scroll {
+  overflow: auto !important;
+  max-width: 100%;
+  max-height: 100%;
 }
 
-.CodeMirror-lines {
+/* Never wrap long lines: keep them on one line and scroll sideways */
+.CodeMirror-lines,
+.CodeMirror pre,
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
   white-space: pre !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+.CodeMirror-wrap pre,
+.CodeMirror-wrap pre.CodeMirror-line,
+.CodeMirror-wrap pre.CodeMirror-line-like {
+  white-space: pre !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+}
+
+.CodeMirror-gutters {
+  background: #e6eef7 !important;
+  border-right: 1px solid #c9d9e8 !important;
+}
+
+.CodeMirror-linenumber {
+  color: #7f8c8d;
+}
+
+.CodeMirror-cursor {
+  border-left: 2px solid #2980b9 !important;
 }
 
 /* Currently-executing line highlight (step mode indicator) */
 .CodeMirror .step-current-line {
   background: #fef08a !important;
   box-shadow: inset 4px 0 0 0 #ca8a04;
+}
+
+/* Editor scrollbars */
+.CodeMirror-hscrollbar,
+.CodeMirror-vscrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar,
+.CodeMirror-hscrollbar::-webkit-scrollbar,
+.CodeMirror-vscrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-track,
+.CodeMirror-hscrollbar::-webkit-scrollbar-track,
+.CodeMirror-vscrollbar::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-thumb,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb,
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 6px;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-thumb:hover,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover,
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* ================= CONSOLE VIEWPORT ================= */
@@ -201,10 +284,15 @@ button:disabled {
   font-family: 'Fira Code', monospace;
   font-size: 13px;
   height: 140px;
+  min-height: 140px;
+  max-height: 140px;
   margin: 0;
-  overflow-y: auto;       
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre;      /* keep lines intact, scroll horizontally */
   border: 1px solid #374151;
   width: 100%;
+  flex-shrink: 0;
 }
 
 /* ================= STRICT FIXED FLOWCHART AREA WITH AUTO OVERFLOW ================= */
@@ -215,36 +303,36 @@ button:disabled {
   overflow-x: auto !important;
   overflow-y: auto !important;
   border: 1px solid #b7e4c7;
-  background: #eef7f2; 
+  background: #eef7f2;
   border-radius: 6px;
   padding: 20px;
   margin-bottom: 15px;
   position: relative !important;
   display: block !important;
   contain: size layout style;
-  -webkit-overflow-scrolling: touch; 
+  -webkit-overflow-scrolling: touch;
 }
 
-#output svg { 
-  display: inline-block !important; 
+#output svg {
+  display: inline-block !important;
   margin: 0 !important;
-  max-width: none !important;  
+  max-width: none !important;
   max-height: none !important;
 }
 
 /* ================= COMPILER SYNTAX HIGHLIGHTING ================= */
-.cm-comment-custom { color: #7f8c8d; font-style: italic; } 
-.cm-string-custom { color: #b84a39; } 
+.cm-comment-custom { color: #7f8c8d; font-style: italic; }
+.cm-string-custom { color: #b84a39; }
 
-.cm-kw-control { color: #8e44ad; font-weight: 600; } 
-.cm-kw-declaration { color: #d81b60; font-weight: 600; } 
-.cm-kw-logic { color: #e67e22; font-weight: 600; } 
-.cm-kw-statement { color: #16a085; font-weight: 600; } 
+.cm-kw-control { color: #8e44ad; font-weight: 600; }
+.cm-kw-declaration { color: #d81b60; font-weight: 600; }
+.cm-kw-logic { color: #e67e22; font-weight: 600; }
+.cm-kw-statement { color: #16a085; font-weight: 600; }
 
-.cm-func-call { color: #0056b3; font-weight: 500; } 
-.cm-object-access { color: #2c3e50; font-weight: 500; } 
-.cm-bangla-number { color: #27ae60; font-weight: 600; } 
-.cm-variable-custom { color: #2c3e50; } 
+.cm-func-call { color: #0056b3; font-weight: 500; }
+.cm-object-access { color: #2c3e50; font-weight: 500; }
+.cm-bangla-number { color: #27ae60; font-weight: 600; }
+.cm-variable-custom { color: #2c3e50; }
 
 /* ================= FOOTER ================= */
 footer {
@@ -265,27 +353,35 @@ footer {
 }
 
 .footer-links a {
-  color: inherit;          
-  text-decoration: none;   
+  color: inherit;
+  text-decoration: none;
   font-weight: 500;
   transition: opacity 0.2s;
 }
 
-.footer-links a:hover { 
-  color: inherit;          
-  text-decoration: none;   
-  opacity: 0.8;            
+.footer-links a:hover {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.8;
 }
 
-.developer-info { 
-  font-size: 13px; 
-  color: #94a3b8; 
+.developer-info {
+  font-size: 13px;
+  color: #94a3b8;
 }
 
 /* ================= RESPONSIVE VIEWPORT ================= */
 @media (max-width: 850px) {
-  .workspace { grid-template-columns: 1fr; }
-  #output { height: 400px !important; max-height: 400px !important; } 
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+
+  #editor {
+    height: 280px;
+    min-height: 280px;
+    max-height: 280px;
+    flex: 0 0 280px;
+  }
+
+  #output { height: 400px !important; max-height: 400px !important; }
   button { font-size: 12px; padding: 12px 10px; gap: 4px; }
   header { text-align: center; }
 }
