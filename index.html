@@ -37,15 +37,6 @@
         <button class="btn-run" onclick="runCode()"> ▶️ Run The Code</button>
         <button class="btn-action" onclick="generateFlowchart()">🎨 Generate Flowchart</button>
       </div>
-
-      <!-- ============ STEP-BY-STEP (LINE-BY-LINE) EXECUTION CONTROLS ============ -->
-      <span class="section-title">🚀 Step by Step Execution:</span>
-      <div class="button-group step-control-group">
-        <button id="stepStartBtn" class="btn-step-start">🚀 Start Step</button>
-        <button id="stepNextBtn" class="btn-step-next" disabled>⏭️ Next</button>
-        <button id="stepAutoBtn" class="btn-step-auto" disabled>⏩ Play</button>
-        <button id="stepResetBtn" class="btn-step-reset" disabled>🔄 Reset</button>
-      </div>
       
       <span class="section-title">💻 Console Output:</span>
       <pre id="console"></pre>
@@ -79,5 +70,49 @@
 
 <script src="script.js"></script>
 
+<script>
+
+  // ২. রান টাইমে কনসোল ডেটা কন্টেন্ট প্রসেস করার ফিল্টার ইঞ্জিন
+  function formatConsoleOutput(value) {
+    if (value === null) return "null";
+    if (value === undefined) return "undefined";
+    
+    if (Array.isArray(value)) {
+      return "[" + value.map(v => formatConsoleOutput(v)).join(", ") + "]";
+    }
+    
+    if (typeof value === "object") {
+      return "{ " + Object.entries(value).map(([k, v]) => `${k}: ${formatConsoleOutput(v)}`).join(", ") + " }";
+    }
+    
+    return value;
+  }
+
+  // ৩. মূল রান ফাংশন (script.js এর ইন্টিগ্রেটেড কম্পাইলার হ্যান্ডলার)
+  function runCode() {
+    const consoleEl = document.getElementById("console");
+    consoleEl.innerText = "";
+    
+    // script.js এর মেইন ফাংশন এক্সিস্টেন্স চেক, না থাকলে ফলব্যাক হ্যান্ডলার কাজ করবে
+    const compileProcessor = typeof banglaToJS === 'function' ? banglaToJS : function(rawCode) { return rawCode; };
+    
+    const code = compileProcessor(editor.getValue());
+    const originalLog = console.log;
+    
+    // console.log ইন্টারসেপ্ট ও রি-রাইট মেকানিজম
+    console.log = (...args) => {
+      const formattedArgs = args.map(arg => formatConsoleOutput(arg));
+      consoleEl.innerText += formattedArgs.join(" ") + "\n";
+    };
+
+    try { 
+      eval(code); 
+    } catch(err) { 
+      consoleEl.innerText += "Error: " + err.message; 
+    }
+    
+    console.log = originalLog; // কনসোল ডিফল্ট স্টেটে রিসেট
+  } 
+</script>
 </body>
 </html>
